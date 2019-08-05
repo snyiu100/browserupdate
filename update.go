@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,11 +10,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"encoding/json"
+
+	"gopkg.in/ini.v1"
 	//"github.com/gin-gonic/gin"
 )
-
-const DEFALUT_PORT = 10805
 
 func Version(w http.ResponseWriter, r *http.Request) {
 	desPath := r.URL.Path[1:len(r.URL.Path)]
@@ -73,24 +73,29 @@ func handleGetExecute(w http.ResponseWriter, r *http.Request) {
 
 func GetData(w http.ResponseWriter, r *http.Request) {
 	desPath := r.URL.Path[1:len(r.URL.Path)]
+	fmt.Println(desPath)
 	if strings.Contains(desPath, "api/") {
 		fmt.Println("api") // 下发版本
-		
-		w.Write()
+
 	}
 	if strings.Contains(desPath, "dist") {
 		fmt.Println("dist") // 下发文件
-		w.Write()
+
 	}
 }
 
 func main() {
-	port := flag.Int("p", DEFALUT_PORT, "Set The Http Port")
+	dir, _ := os.Getwd()
+	inifile := dir + "cfg.ini"
+	cfg, err := ini.Load(inifile)
+
+	httpport, _ := cfg.Section("").Key("http_port").Int()
+
+	port := flag.Int("p", httpport, "Set The Http Port")
 	flag.Parse()
 
 	http.HandleFunc("/", GetData)
-	//http.HandleFunc("/dist", handleGetExecute)
-	err := http.ListenAndServe(":"+strconv.Itoa(*port), nil)
+	http.ListenAndServe(":"+strconv.Itoa(*port), nil)
 	if nil != err {
 		log.Fatal("Get Dir err", err.Error())
 	}
